@@ -1,0 +1,41 @@
+spring:
+    application:
+        name: tabletop-rpg-manager-dev
+    datasource:
+        url: jdbc:postgresql://${PGHOST:localhost}:${PGPORT:8010}/${PGDATABASE:trpg_db}
+        username: ${PGUSER:trpg_user}
+        password: ${PGPASSWORD:trpg_password}
+        driver-class-name: org.postgresql.Driver
+    jpa:
+        hibernate:
+            ddl-auto: update # dev only!
+        show-sql: true
+        properties:
+            hibernate:
+                dialect: org.hibernate.dialect.PostgreSQLDialect
+                format-sql: true
+                # use_sql_comments: true
+                envers:
+                    audit-table-suffix: _audit
+                    revision-field-name: revision_id
+                    revision-type-field-name: revision_type
+                    default-schema: audit
+
+server:
+    port: 8080
+
+management:
+    server:
+        port: 8081
+    endpoints:
+        web:
+            exposure:
+                include: health,info,metrics,beans,env,loggers
+    endpoint:
+        health:
+            show-details: when-authorized
+
+
+logging:
+    level:
+        root: DEBUG
