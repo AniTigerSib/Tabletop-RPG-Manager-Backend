@@ -1,0 +1,42 @@
+services:
+  develop_db:
+    image: postgres:15-alpine
+    container_name: trpg_develop_postgres_db
+    environment:
+      POSTGRES_DB: trpg_db
+      POSTGRES_USER: trpg_user
+      POSTGRES_PASSWORD: trpg_password
+    volumes:
+      - dev_postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    ports:
+      - "8010:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trpg_user -d trpg_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  # pgadmin:
+  #   image: dpage/pgadmin4
+  #   container_name: my_pgadmin
+  #   restart: always
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: admin@admin.com
+  #     PGADMIN_DEFAULT_PASSWORD: admin
+  #   ports:
+  #     - "5050:80"
+
+
+volumes:
+  dev_postgres_data:
+
+  # app:
+  #   build: .
+  #   ports:
+  #     - "8080:8080"
+  #   environment:
+  #     SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/trpg_db
+  #     SPRING_DATASOURCE_USERNAME: trpg_user
+  #     SPRING_DATASOURCE_PASSWORD: trpg_password
+  #   depends_on:
+  #     - db

@@ -1,0 +1,24 @@
+spring:
+    application:
+        name: tabletop-rpg-manager
+    datasource:
+        url: jdbc:postgresql://localhost:5432/trpg_db
+        username: trpg_user
+        password: trpg_password
+        driver-class-name: org.postgresql.Driver
+    jpa:
+        hibernate:
+            ddl-auto: validate
+        show-sql: true
+        properties:
+            hibernate:
+                format-sql: true
+                # use_sql_comments: true
+        database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+server:
+    port: 8080
+
+logging:
+    level:
+        root: INFO
