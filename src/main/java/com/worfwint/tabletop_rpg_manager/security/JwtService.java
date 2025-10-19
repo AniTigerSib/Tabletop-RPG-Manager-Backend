@@ -52,19 +52,22 @@ public class JwtService {
     /// Generating
 
     public String generateAccessToken(Long userId) {
-        final String token = buildAccessToken(userId, Map.of(), accessExpiration);
-        tokenCacheService.saveAccessTokenVersion(userId, extractJti(token), Duration.ofMillis(accessExpiration));
+        final String tokenId = UUID.randomUUID().toString();
+        final String token = buildAccessToken(userId, tokenId, Map.of(), accessExpiration);
+        tokenCacheService.saveAccessTokenVersion(userId, tokenId, Duration.ofMillis(accessExpiration));
         return token;
     }
 
     public String generateAccessToken(Long userId, Map<String, Object> extraClaims) {
-        final String token = buildAccessToken(userId, extraClaims, accessExpiration);
-        tokenCacheService.saveAccessTokenVersion(userId, extractJti(token), Duration.ofMillis(accessExpiration));
+        final String tokenId = UUID.randomUUID().toString();
+        final String token = buildAccessToken(userId, tokenId, extraClaims, accessExpiration);
+        tokenCacheService.saveAccessTokenVersion(userId, tokenId, Duration.ofMillis(accessExpiration));
         return token;
     }
 
-    private String buildAccessToken(Long userId, Map<String, Object> extraClaims, long expiration) {
+    private String buildAccessToken(Long userId, String tokenId, Map<String, Object> extraClaims, long expiration) {
         return Jwts.builder()
+                    .id(tokenId)
                     .claims(extraClaims)
                     .subject(userId.toString())
                     .issuer(issuer)
