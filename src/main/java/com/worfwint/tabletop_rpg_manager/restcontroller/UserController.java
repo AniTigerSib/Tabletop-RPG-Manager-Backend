@@ -1,9 +1,12 @@
 package com.worfwint.tabletop_rpg_manager.restcontroller;
 
+import java.util.List;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.worfwint.tabletop_rpg_manager.dto.response.UserPublicProfileResponse;
 import com.worfwint.tabletop_rpg_manager.services.UserService;
 
 
@@ -22,8 +25,8 @@ public class UserController {
     }
 
     @GetMapping("/")
-    public String getAllUsers() {
-        return userService.getAllUsers().toString();
+    public List<UserPublicProfileResponse> getAllUsers() {
+        return userService.getAllUsers();
     }
     
 }

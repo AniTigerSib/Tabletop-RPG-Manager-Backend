@@ -1,10 +1,4 @@
 package com.worfwint.tabletop_rpg_manager.services;
-
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,7 +12,6 @@ import com.worfwint.tabletop_rpg_manager.entity.User;
 import com.worfwint.tabletop_rpg_manager.entity.UserToken;
 import com.worfwint.tabletop_rpg_manager.repository.UserRepository;
 import com.worfwint.tabletop_rpg_manager.security.JwtService;
-import com.worfwint.tabletop_rpg_manager.security.userdetails.UserDetailsServiceImpl;
 
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -36,8 +29,7 @@ public class AuthService {
     private final UserTokenRepository userTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-    private final AuthenticationManager authenticationManager;
-    // private final UserDetailsServiceImpl userDetailsService;
+    private final TokenCacheService tokenCacheService;
 
     @Transactional
     public AuthResponse register(@Valid @RequestBody RegisterRequest request) {
@@ -97,11 +89,12 @@ public class AuthService {
                     .orElseThrow(() -> new RuntimeException("User not found"));
         }
 
-        if (!passwordEncoder.matches(passwordEncoder.encode(request.getPassword()), user.getPasswordHash())) {
+        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new RuntimeException("Invalid password");
         }
 
-        // TODO(michael): invalidate token in redis
+        // TODO(michael): check work
+        tokenCacheService.invalidate(user.getId());
 
         // UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
         String accessToken = jwtService.generateAccessToken(user.getId());
