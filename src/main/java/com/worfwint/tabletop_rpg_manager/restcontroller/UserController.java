@@ -13,11 +13,11 @@ import com.worfwint.tabletop_rpg_manager.services.UserService;
  */
 @RestController
 @RequestMapping("/api/users")
-public class UserRestController {
+public class UserController {
     private final UserService userService;
 
     // @Autowired
-    public UserRestController(UserService userService) {
+    public UserController(UserService userService) {
         this.userService = userService;
     }
 

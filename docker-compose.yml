@@ -16,6 +16,18 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+  develop_redis:
+    image: redis:7-alpine
+    container_name: trpg_develop_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - dev_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
   # pgadmin:
   #   image: dpage/pgadmin4
   #   container_name: my_pgadmin
@@ -29,6 +41,7 @@ services:
 
 volumes:
   dev_postgres_data:
+  dev_redis_data:
 
   # app:
   #   build: .

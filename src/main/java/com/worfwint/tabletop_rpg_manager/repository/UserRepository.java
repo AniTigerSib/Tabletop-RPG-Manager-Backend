@@ -9,7 +9,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import com.worfwint.tabletop_rpg_manager.entity.User;
-import com.worfwint.tabletop_rpg_manager.entity.enums.UserRole;
 
 /**
  * UserRepository interface implemented via Spring Data JPA.
@@ -34,9 +33,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // Page<User> findByEmailContainingIgnoreCase(String email, Pageable pageable);
 
-    Page<User> findByRole(UserRole role, Pageable pageable);
-
-    Page<User> findByRoleAndUsernameContainingIgnoreCase(UserRole role, String username, Pageable pageable);
+    // Page<User> findByRoleAndUsernameContainingIgnoreCase(UserRole role, String username, Pageable pageable);
 
     Page<User> findByUsernameContainingIgnoreCaseAndEmailContainingIgnoreCase(String username, String email, Pageable pageable);
 

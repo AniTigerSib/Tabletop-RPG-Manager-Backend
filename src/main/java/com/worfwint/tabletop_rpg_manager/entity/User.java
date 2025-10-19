@@ -15,14 +15,15 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.CollectionTable;
 
 /**
  * Entity representing a user in the system. Audited for tracking changes over time.
@@ -44,15 +45,17 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(name = "password_hash")
+    @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
-    @Column(name = "oauth_provider")
-    private String oauthProvider;
+    // TODO: implement in future
+    // @Column(name = "oauth_provider")
+    // private String oauthProvider;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private UserRole role = UserRole.USER;
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "roles")
+    private Set<String> roles = new HashSet<>(Set.of(UserRole.USER.name()));
 
     @Column(name = "display_name")
     private String displayName;
@@ -64,7 +67,7 @@ public class User {
     private String avatarUrl;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<UserTokens> tokens = new HashSet<>();
+    private Set<UserToken> tokens = new HashSet<>();
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -78,17 +81,10 @@ public class User {
 
     public User() {}
 
-    public User(String username, String email, UserRole role) {
-        this.username = username;
-        this.email = email;
-        this.role = role;
-    }
-
-    public User(String username, String email, String passwordHash, UserRole role) {
+    public User(String username, String email, String passwordHash) {
         this.username = username;
         this.email = email;
         this.passwordHash = passwordHash;
-        this.role = role;
     }
 
     // Getters and Setters
@@ -121,18 +117,14 @@ public class User {
         this.passwordHash = passwordHash;
     }
 
-    public String getOauthProvider() {
-        return oauthProvider;
+    public Set<String> getRoles() {
+        return roles;
     }
-    public void setOauthProvider(String oauthProvider) {
-        this.oauthProvider = oauthProvider;
+    public void giveRole(UserRole role) {
+        this.roles.add(role.name());
     }
-
-    public UserRole getRole() {
-        return role;
-    }
-    public void setRole(UserRole role) {
-        this.role = role;
+    public void removeRole(UserRole role) {
+        this.roles.remove(role.name());
     }
 
     public String getDisplayName() {
@@ -156,10 +148,10 @@ public class User {
         this.avatarUrl = avatarUrl;
     }
 
-    public Set<UserTokens> getTokens() {
+    public Set<UserToken> getTokens() {
         return tokens;
     }
-    public void setTokens(Set<UserTokens> tokens) {
+    public void setTokens(Set<UserToken> tokens) {
         this.tokens = tokens;
     }
 
@@ -198,7 +190,7 @@ public class User {
                 "id=" + id +
                 ", username='" + username + '\'' +
                 ", email='" + email + '\'' +
-                ", role=" + role.toString() +
+                ", role=" + roles.toString() +
                 ", displayName='" + displayName + '\'' +
                 ", bio='" + bio + '\'' +
                 ", avatarUrl='" + avatarUrl + '\'' +
