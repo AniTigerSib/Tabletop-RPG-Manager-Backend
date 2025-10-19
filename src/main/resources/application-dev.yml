@@ -35,6 +35,13 @@ management:
         health:
             show-details: when-authorized
 
+jwt:
+    secret: ${random.value}
+    # secret: ${JWT_SECRET:${random.value}}
+    refresh-length: 32 # 256 bits of entropy
+    access-expiration: 300000 # 5 minutes (in milliseconds)
+    refresh-expiration: 900000 # 15 minutes (in milliseconds)
+    issuer: tabletop-rpg-manager-dev
 
 logging:
     level:

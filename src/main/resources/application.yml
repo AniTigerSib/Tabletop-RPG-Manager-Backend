@@ -22,3 +22,10 @@ server:
 logging:
     level:
         root: INFO
+
+jwt:
+    secret: ${JWT_SECRET:change-me}
+    refresh-length: ${JWT_REFRESH_LENGTH:32}
+    access-expiration: ${JWT_ACCESS_EXPIRATION:300000}
+    refresh-expiration: ${JWT_REFRESH_EXPIRATION:900000}
+    issuer: ${JWT_ISSUER:tabletop-rpg-manager}
