@@ -7,6 +7,7 @@ import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Map;
@@ -60,8 +61,6 @@ public class JwtService {
         this.userTokenRepository = userTokenRepository;
     }
 
-    
-
     // Generating
 
     public TokenPair generateTokenPair(User user) {
@@ -85,6 +84,10 @@ public class JwtService {
         if (tokenValue == null || !passwordEncoder.matches(tokenValue, token.getToken())) {
             throw new UnauthorizedException("Invalid refresh token");
         }
+
+        if (token.getExpiresAt().before(new Date())) {
+            throw new UnauthorizedException("Refresh token expired");
+        }
         
         if (token.isRevoked()) {
             throw new UnauthorizedException("Refresh token already revoked");
@@ -104,10 +107,10 @@ public class JwtService {
         final String token = buildAccessToken(tokenId, user.getId(), accessExpiration, Map.of(
             "username", user.getUsername(),
             "email", user.getEmail(),
-            "roles", user.getRoles()
+            "roles", new ArrayList<>(user.getRoleNames())
         ));
         tokenCacheService.saveAccessTokenVersion(user.getId(), tokenId, Duration.ofMillis(accessExpiration));
-        return Base64.getEncoder().withoutPadding().encodeToString(token.getBytes(StandardCharsets.UTF_8));
+        return token;
     }
 
     private String buildAccessToken(String tokenId, Long userId, long expiration, Map<String, Object> extraClaims) {
@@ -140,6 +143,13 @@ public class JwtService {
                     .compact();
         userTokenRepository.save(new UserToken(tokenId, user, passwordEncoder.encode(baseToken), expiresAt));
         return token;
+    }
+
+    // Invalidating
+
+    public void revokeAllTokens(Long userId) {
+        tokenCacheService.invalidate(userId);
+        userTokenRepository.revokeAllTokensForUser(userId, new Date());
     }
 
     // Validation

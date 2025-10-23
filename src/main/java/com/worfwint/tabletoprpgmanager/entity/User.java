@@ -1,8 +1,11 @@
 package com.worfwint.tabletoprpgmanager.entity;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.hibernate.envers.Audited;
 import org.springframework.data.annotation.CreatedDate;
@@ -12,18 +15,22 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import com.worfwint.tabletoprpgmanager.entity.enums.UserRole;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.CollectionTable;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
 
 /**
  * Entity representing a user in the system. Audited for tracking changes over time.
@@ -52,10 +59,11 @@ public class User {
     // @Column(name = "oauth_provider")
     // private String oauthProvider;
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.EAGER, targetClass = UserRole.class)
     @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
+    @Enumerated(EnumType.STRING)
     @Column(name = "roles")
-    private Set<String> roles = new HashSet<>(Set.of(UserRole.USER.name()));
+    private Set<UserRole> roles = EnumSet.of(UserRole.USER);
 
     @Column(name = "display_name")
     private String displayName;
@@ -117,14 +125,34 @@ public class User {
         this.passwordHash = passwordHash;
     }
 
-    public Set<String> getRoles() {
-        return Set.copyOf(roles);
+    public Set<UserRole> getRoles() {
+        return Collections.unmodifiableSet(roles);
     }
-    public void giveRole(UserRole role) {
-        this.roles.add(role.name());
+    public void setRoles(Set<UserRole> roles) {
+        if (roles == null || roles.isEmpty()) {
+            this.roles = EnumSet.of(UserRole.USER);
+        } else {
+            this.roles = EnumSet.copyOf(roles);
+            ensureDefaultRolePresent();
+        }
+    }
+    public void addRole(UserRole role) {
+        if (role != null) {
+            this.roles.add(role);
+        }
     }
     public void removeRole(UserRole role) {
-        this.roles.remove(role.name());
+        if (role == null) {
+            return;
+        }
+        this.roles.remove(role);
+        ensureDefaultRolePresent();
+    }
+
+    public Set<String> getRoleNames() {
+        return roles.stream()
+                .map(UserRole::name)
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     public String getDisplayName() {
@@ -151,13 +179,24 @@ public class User {
     public Set<UserToken> getTokens() {
         return Set.copyOf(tokens);
     }
+    public void setTokens(Set<UserToken> tokens) {
+        if (tokens == null || tokens.isEmpty()) {
+            this.tokens = new HashSet<>();
+        } else {
+            this.tokens = new HashSet<>(tokens);
+        }
+    }
     public void addToken(UserToken token) {
-        this.tokens.add(token);
-        token.setUser(this);
+        if (token != null) {
+            this.tokens.add(token);
+            token.setUser(this);
+        }
     }
     public void removeToken(UserToken token) {
-        this.tokens.remove(token);
-        token.setUser(null);
+        if (token != null) {
+            this.tokens.remove(token);
+            token.setUser(null);
+        }
     }
 
     public LocalDateTime getCreatedAt() {
@@ -172,6 +211,22 @@ public class User {
     }
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    @PrePersist
+    @PreUpdate
+    private void ensureRoleIntegrity() {
+        if (roles == null || roles.isEmpty()) {
+            roles = EnumSet.of(UserRole.USER);
+        } else {
+            ensureDefaultRolePresent();
+        }
+    }
+
+    private void ensureDefaultRolePresent() {
+        if (!roles.contains(UserRole.USER)) {
+            roles.add(UserRole.USER);
+        }
     }
 
     @Override

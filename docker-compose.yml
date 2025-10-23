@@ -19,6 +19,7 @@ services:
   develop_redis:
     image: redis:7-alpine
     container_name: trpg_develop_redis
+    command: ["redis-server", "--appendonly", "yes"]
     ports:
       - "6379:6379"
     volumes:
