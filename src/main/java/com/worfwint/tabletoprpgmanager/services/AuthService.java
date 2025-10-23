@@ -78,9 +78,10 @@ public class AuthService {
         }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            throw new InvalidCredentialsException();
+            throw new InvalidCredentialsException("Invalid credentails");
         }
 
+        jwtService.revokeAllTokens(user.getId());
         TokenPair tokenPair = jwtService.generateTokenPair(user);
 
         return new AuthResponse(
@@ -95,7 +96,7 @@ public class AuthService {
 
     @Transactional
     public AuthResponse refreshToken(String refreshToken) {
-
+        refreshToken = refreshToken.trim();
         Long userId = jwtService.extractSubject(refreshToken);
 
         User user = userRepository.findById(userId)
@@ -113,8 +114,8 @@ public class AuthService {
         );
     }
 
-    // @Transactional
-    // public void logout() {
-    //     jwtService.revokeRefreshToken(refreshToken);
-    // }
+    @Transactional
+    public void logout(Long userId) {
+        jwtService.revokeAllTokens(userId);
+    }
 }

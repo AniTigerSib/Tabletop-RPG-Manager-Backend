@@ -6,6 +6,12 @@ spring:
         username: ${PGUSER:trpg_user}
         password: ${PGPASSWORD:trpg_password}
         driver-class-name: org.postgresql.Driver
+    data:
+        redis:
+            host: ${REDIS_HOST:localhost}
+            port: ${REDIS_PORT:6379}
+            username: ${REDIS_USERNAME:}
+            password: ${REDIS_PASSWORD:}
     jpa:
         hibernate:
             ddl-auto: update # dev only!
@@ -36,7 +42,8 @@ management:
             show-details: when-authorized
 
 jwt:
-    secret: ${random.value}
+    secret: secret-key-for-dev-environment-please-change-me
+    # secret: ${random.value}
     # secret: ${JWT_SECRET:${random.value}}
     refresh-length: 32 # 256 bits of entropy
     access-expiration: 300000 # 5 minutes (in milliseconds)

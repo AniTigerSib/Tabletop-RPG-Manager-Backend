@@ -31,7 +31,7 @@ public class UserDetailsServiceImpl implements UserDetailsService{
         User user = userRepository.findByUsername(username)
                      .orElseThrow(() -> new UsernameNotFoundException("Not found"));
         List<GrantedAuthority> auth = user.getRoles().stream()
-                 .map(SimpleGrantedAuthority::new)
+                 .map(role -> new SimpleGrantedAuthority(role.name()))
                  .collect(Collectors.toList());
         return new UserDetailsImpl(user.getId(), user.getUsername(), user.getEmail(), user.getPasswordHash(), auth);
     }
@@ -40,7 +40,7 @@ public class UserDetailsServiceImpl implements UserDetailsService{
         User user = userRepository.findById(userId)
                      .orElseThrow(() -> new UsernameNotFoundException("Not found"));
         List<GrantedAuthority> auth = user.getRoles().stream()
-                 .map(SimpleGrantedAuthority::new)
+                 .map(role -> new SimpleGrantedAuthority(role.name()))
                  .collect(Collectors.toList());
         return new UserDetailsImpl(user.getId(), user.getUsername(), user.getEmail(), user.getPasswordHash(), auth);
     }

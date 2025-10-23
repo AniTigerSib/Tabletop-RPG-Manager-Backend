@@ -1,6 +1,7 @@
 package com.worfwint.tabletoprpgmanager.security;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -34,7 +35,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         this.jwtService = jwtService;
     }
 
-    @SuppressWarnings("null")
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -60,11 +60,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     jwtService.extractClaim(token, "username", String.class),
                     jwtService.extractClaim(token, "email", String.class));
             @SuppressWarnings("unchecked")
-            Set<String> rolesSet = jwtService.extractClaim(token, "roles", Set.class);
-            List<GrantedAuthority> roles = rolesSet.stream()
+            List<String> roles = jwtService.extractClaim(token, "roles", List.class);
+            List<GrantedAuthority> authorities = roles.stream()
                     .map(SimpleGrantedAuthority::new)
                     .collect(Collectors.toList());
-            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null, roles);
+            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null, authorities);
             SecurityContextHolder.getContext().setAuthentication(auth);
             
             filterChain.doFilter(request, response);

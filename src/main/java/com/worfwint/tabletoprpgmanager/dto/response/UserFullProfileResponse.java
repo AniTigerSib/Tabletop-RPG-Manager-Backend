@@ -3,6 +3,8 @@ package com.worfwint.tabletoprpgmanager.dto.response;
 import java.time.LocalDateTime;
 import java.util.Set;
 
+import com.worfwint.tabletoprpgmanager.entity.enums.UserRole;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,7 +23,7 @@ public class UserFullProfileResponse {
     private String displayName;
     private String bio;
     private String avatarUrl;
-    private Set<String> roles;
+    private Set<UserRole> roles;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
