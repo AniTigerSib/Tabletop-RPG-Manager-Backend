@@ -22,7 +22,7 @@ public class UserDetailsServiceImpl implements UserDetailsService{
 
     private final UserRepository userRepository;
     
-    public UserDetailsServiceImpl(com.worfwint.tabletop_rpg_manager.repository.UserRepository userRepository) {
+    public UserDetailsServiceImpl(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
