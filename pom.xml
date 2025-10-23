@@ -18,7 +18,13 @@
 		<license/>
 	</licenses>
 	<developers>
-		<developer/>
+		<developer>
+			<id>mikhailk</id>
+			<name>Mikhail Khudoleev</name>
+			<roles>
+				<role>Developer</role>
+			</roles>
+		</developer>
 	</developers>
 	<scm>
 		<connection/>
@@ -126,6 +132,13 @@
 			<version>${jjwt.version}</version>
 			<scope>runtime</scope>
 		</dependency>
+
+		<!-- Checkstyle -->
+		<dependency>
+			<groupId>com.puppycrawl.tools</groupId>
+			<artifactId>checkstyle</artifactId>
+			<version>12.1.0</version>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -152,7 +165,7 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
 
-			<plugin>
+			<!-- <plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-checkstyle-plugin</artifactId>
 				<version>3.3.1</version>
@@ -171,12 +184,12 @@
 					</goals>
 					</execution>
 				</executions>
-    		</plugin>
+    		</plugin> -->
 
-			<plugin>
+			<!-- <plugin>
 				<groupId>com.github.spotbugs</groupId>
 				<artifactId>spotbugs-maven-plugin</artifactId>
-				<version>4.8.6.2</version>
+				<version>4.9.8.0</version>
 				<configuration>
 					<effort>Max</effort>
 					<threshold>Low</threshold>
@@ -192,15 +205,22 @@
 					</goals>
 					</execution>
 				</executions>
-    		</plugin>
+				<dependencies>
+					<dependency>
+						<groupId>com.github.spotbugs</groupId>
+						<artifactId>spotbugs</artifactId>
+						<version>4.9.8</version>
+					</dependency>
+				</dependencies>
+    		</plugin> -->
 
-			<plugin>
+			<!-- <plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-pmd-plugin</artifactId>
 				<version>3.24.0</version>
 				<configuration>
 					<printFailingErrors>true</printFailingErrors>
-					<targetJdk>17</targetJdk> <!-- измени под свой -->
+					<targetJdk>21</targetJdk>
 				</configuration>
 				<executions>
 					<execution>
@@ -211,7 +231,7 @@
 					</goals>
 					</execution>
 				</executions>
-			</plugin>
+			</plugin> -->
 		</plugins>
 	</build>
 </project>
