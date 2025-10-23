@@ -1,7 +1,6 @@
 package com.worfwint.tabletop_rpg_manager.services;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,6 +9,7 @@ import com.worfwint.tabletop_rpg_manager.dto.response.UserFullProfileResponse;
 import com.worfwint.tabletop_rpg_manager.dto.response.UserPublicProfileResponse;
 import com.worfwint.tabletop_rpg_manager.dto.response.UserSearchInfoResponse;
 import com.worfwint.tabletop_rpg_manager.entity.User;
+import com.worfwint.tabletop_rpg_manager.exception.UserNotFoundException;
 import com.worfwint.tabletop_rpg_manager.repository.UserRepository;
 
 /**
@@ -31,25 +31,25 @@ public class UserService {
 
     public UserPublicProfileResponse getPublicUserProfile(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(UserNotFoundException::new);
         return mapToUserPublicProfileResponse(user);
     }
 
     public UserFullProfileResponse getFullUserProfile(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(UserNotFoundException::new);
         return mapToUserFullProfileResponse(user);
     }
 
     public UserPublicProfileResponse getPublicUserProfileByUsername(String username) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(UserNotFoundException::new);
         return mapToUserPublicProfileResponse(user);
     }
 
     public UserFullProfileResponse getFullUserProfileByUsername(String username) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(UserNotFoundException::new);
         return mapToUserFullProfileResponse(user);
     }
 
@@ -60,18 +60,18 @@ public class UserService {
     public List<UserPublicProfileResponse> getAllUsers() {
         return userRepository.findAll().stream()
                 .map(this::mapToUserPublicProfileResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public List<UserSearchInfoResponse> searchUsersByUsername(String username) {
         return userRepository.findByUsernameContainingIgnoreCase(username).stream()
                 .map(this::mapToUserSearchInfoRespose)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public void deleteUser(Long userId) {
         if (!userRepository.existsById(userId)) {
-            throw new RuntimeException("User not found");
+            throw new UserNotFoundException();
         }
         userRepository.deleteById(userId);
     }
@@ -79,9 +79,9 @@ public class UserService {
     public boolean isCurrentUser(Long userId, String username) {
         try {
             User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+                    .orElseThrow(UserNotFoundException::new);
             return user.getUsername().equals(username);
-        } catch (Exception e) {
+        } catch (UserNotFoundException e) {
             return false;
         }
     }

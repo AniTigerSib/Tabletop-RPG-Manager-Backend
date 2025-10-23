@@ -4,12 +4,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import com.worfwint.tabletop_rpg_manager.dto.RefreshTokenServiced;
+import com.worfwint.tabletop_rpg_manager.dto.TokenPair;
 import com.worfwint.tabletop_rpg_manager.dto.request.LoginRequest;
 import com.worfwint.tabletop_rpg_manager.dto.request.RegisterRequest;
 import com.worfwint.tabletop_rpg_manager.dto.response.AuthResponse;
 import com.worfwint.tabletop_rpg_manager.entity.User;
 import com.worfwint.tabletop_rpg_manager.entity.UserToken;
+import com.worfwint.tabletop_rpg_manager.exception.EmailAlreadyExistsException;
+import com.worfwint.tabletop_rpg_manager.exception.InvalidCredentialsException;
+import com.worfwint.tabletop_rpg_manager.exception.UsernameAlreadyExistsException;
 import com.worfwint.tabletop_rpg_manager.repository.UserRepository;
 import com.worfwint.tabletop_rpg_manager.security.JwtService;
 
@@ -26,19 +29,19 @@ import com.worfwint.tabletop_rpg_manager.repository.UserTokenRepository;
 @AllArgsConstructor
 public class AuthService {
     private final UserRepository userRepository;
-    private final UserTokenRepository userTokenRepository;
+    
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final TokenCacheService tokenCacheService;
 
     @Transactional
     public AuthResponse register(@Valid @RequestBody RegisterRequest request) {
-        if (userRepository.existsByUsername(request.getUsername())) {
-            throw new RuntimeException("Username already exists");
+        if (Boolean.TRUE.equals(userRepository.existsByUsername(request.getUsername()))) {
+            throw new UsernameAlreadyExistsException();
         }
         
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already exists");
+        if (Boolean.TRUE.equals(userRepository.existsByEmail(request.getEmail()))) {
+            throw new EmailAlreadyExistsException();
         }
 
         // TODO(michael): validate password strength
@@ -58,20 +61,11 @@ public class AuthService {
         
         user = userRepository.save(user);
 
-        String accessToken = jwtService.generateAccessToken(user.getId());
-        RefreshTokenServiced refreshToken = jwtService.generateRefreshToken();
-        String packedRefreshToken = jwtService.combineRefreshTokenWithJti(refreshToken.getToken(), refreshToken.getJti());
-
-        userTokenRepository.save(new UserToken(
-                refreshToken.getJti(),
-                user,
-                passwordEncoder.encode(refreshToken.getToken()),
-                refreshToken.getExpiresAt()
-        ));
+        TokenPair tokenPair = jwtService.generateTokenPair(user.getId());
 
         return new AuthResponse(
-                accessToken,
-                packedRefreshToken,
+                tokenPair.getAccessToken(),
+                tokenPair.getRefreshToken(),
                 user.getId(),
                 user.getUsername(),
                 user.getEmail(),
@@ -83,34 +77,21 @@ public class AuthService {
         User user;
         if (request.getLogin().contains("@")) {
             user = userRepository.findByEmail(request.getLogin())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+                    .orElseThrow(InvalidCredentialsException::new);
         } else {
             user = userRepository.findByUsername(request.getLogin())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+                    .orElseThrow(InvalidCredentialsException::new);
         }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            throw new RuntimeException("Invalid password");
+            throw new InvalidCredentialsException();
         }
 
-        // TODO(michael): check work
-        tokenCacheService.invalidate(user.getId());
+        TokenPair tokenPair = jwtService.generateTokenPair(user.getId());
 
-        // UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
-        String accessToken = jwtService.generateAccessToken(user.getId());
-        RefreshTokenServiced refreshToken = jwtService.generateRefreshToken();
-        String packedRefreshToken = jwtService.combineRefreshTokenWithJti(refreshToken.getToken(), refreshToken.getJti());
-
-        userTokenRepository.save(new UserToken(
-                refreshToken.getJti(),
-                user,
-                passwordEncoder.encode(refreshToken.getToken()),
-                refreshToken.getExpiresAt()
-        ));
-        
         return new AuthResponse(
-                accessToken,
-                packedRefreshToken,
+                tokenPair.getAccessToken(),
+                tokenPair.getRefreshToken(),
                 user.getId(),
                 user.getUsername(),
                 user.getEmail(),

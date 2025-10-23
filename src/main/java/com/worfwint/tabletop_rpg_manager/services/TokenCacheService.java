@@ -38,7 +38,6 @@ public class TokenCacheService {
     }
 
     private String buildKey(Long userId) {
-        // return "access_token_version:" + userId;
         return "access:user:" + userId;
     }
 }
