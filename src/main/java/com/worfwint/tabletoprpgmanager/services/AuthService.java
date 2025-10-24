@@ -94,7 +94,6 @@ public class AuthService {
         );
     }
 
-    @Transactional
     public AuthResponse refreshToken(String refreshToken) {
         refreshToken = refreshToken.trim();
         Long userId = jwtService.extractSubject(refreshToken);

@@ -19,6 +19,7 @@ import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.worfwint.tabletoprpgmanager.dto.TokenPair;
 import com.worfwint.tabletoprpgmanager.entity.User;
@@ -69,6 +70,7 @@ public class JwtService {
         return new TokenPair(access, refresh);
     }
 
+    @Transactional
     public TokenPair refresh(String refreshJwt, User user) {
         if (!isRefreshTokenValid(refreshJwt)) {
             throw new UnauthorizedException("Invalid or expired refresh token");
@@ -93,8 +95,9 @@ public class JwtService {
             throw new UnauthorizedException("Refresh token already revoked");
         }
 
-        token.setRevoked(true);
-        userTokenRepository.save(token);
+        if (userTokenRepository.revokeIfNotRevoked(jti, new Date()) == 0) {
+            throw new UnauthorizedException("Refresh token already revoked");
+        }
 
         final String newRefresh = generateRefreshToken(user);
         final String newAccess = generateAccessToken(user);

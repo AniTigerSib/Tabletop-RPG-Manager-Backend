@@ -1,9 +1,7 @@
 package com.worfwint.tabletoprpgmanager.security;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.http.HttpHeaders;
@@ -61,8 +59,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     jwtService.extractClaim(token, "email", String.class));
             @SuppressWarnings("unchecked")
             List<String> roles = jwtService.extractClaim(token, "roles", List.class);
+            if (roles == null || roles.isEmpty()) {
+                throw new UnauthorizedException("No roles found in token");
+            }
             List<GrantedAuthority> authorities = roles.stream()
-                    .map(SimpleGrantedAuthority::new)
+                    .map(r -> new SimpleGrantedAuthority("ROLE_" + r))
                     .collect(Collectors.toList());
             UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null, authorities);
             SecurityContextHolder.getContext().setAuthentication(auth);
