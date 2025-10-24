@@ -1,4 +1,5 @@
 package com.worfwint.tabletoprpgmanager.services;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,8 +20,7 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 
 /**
- *
- * @author michael
+ * Handles authentication workflows such as registration, login, and token refresh.
  */
 @Service
 @AllArgsConstructor
@@ -30,28 +30,34 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
+    /**
+     * Registers a new user and issues an initial token pair.
+     *
+     * @param request registration details supplied by the client
+     * @return authentication response containing the issued tokens
+     */
     @Transactional
     public AuthResponse register(@Valid @RequestBody RegisterRequest request) {
         if (Boolean.TRUE.equals(userRepository.existsByUsername(request.getUsername()))) {
             throw new UsernameAlreadyExistsException();
         }
-        
+
         if (Boolean.TRUE.equals(userRepository.existsByEmail(request.getEmail()))) {
             throw new EmailAlreadyExistsException();
         }
-        
+
         User user = new User(
                 request.getUsername(),
                 request.getEmail(),
                 passwordEncoder.encode(request.getPassword())
         );
-        
+
         if (request.getDisplayName() != null && !request.getDisplayName().trim().isEmpty()) {
             user.setDisplayName(request.getDisplayName());
         } else {
             user.setDisplayName(request.getUsername());
         }
-        
+
         user = userRepository.save(user);
 
         TokenPair tokenPair = jwtService.generateTokenPair(user);
@@ -66,6 +72,12 @@ public class AuthService {
         );
     }
 
+    /**
+     * Authenticates a user using a username/email and password pair.
+     *
+     * @param request login credentials supplied by the client
+     * @return authentication response containing a fresh token pair
+     */
     @Transactional
     public AuthResponse authenticate(@Valid @RequestBody LoginRequest request) {
         User user;
@@ -94,15 +106,21 @@ public class AuthService {
         );
     }
 
+    /**
+     * Exchanges a refresh token for a new token pair.
+     *
+     * @param refreshToken refresh token provided by the client
+     * @return authentication response containing a refreshed token pair
+     */
     public AuthResponse refreshToken(String refreshToken) {
         refreshToken = refreshToken.trim();
         Long userId = jwtService.extractSubject(refreshToken);
 
         User user = userRepository.findById(userId)
                 .orElseThrow(InvalidCredentialsException::new);
-        
+
         TokenPair tokenPair = jwtService.refresh(refreshToken, user);
-        
+
         return new AuthResponse(
                 tokenPair.getAccessToken(),
                 tokenPair.getRefreshToken(),
@@ -113,6 +131,11 @@ public class AuthService {
         );
     }
 
+    /**
+     * Logs out a user by revoking all of their active tokens.
+     *
+     * @param userId identifier of the user who is logging out
+     */
     @Transactional
     public void logout(Long userId) {
         jwtService.revokeAllTokens(userId);

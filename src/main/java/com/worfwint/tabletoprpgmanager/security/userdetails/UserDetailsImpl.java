@@ -10,45 +10,72 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 /**
- *
- * @author michael
+ * Custom {@link UserDetails} implementation wrapping the application's {@code User} entity.
  */
 @Getter
 @EqualsAndHashCode
 public class UserDetailsImpl implements UserDetails {
     private static final long serialVersionUID = 1L;
+
     private final Long id;
     private final String username;
     private final String email;
     private final String password;
-    private final List<GrantedAuthority> authoriries;
+    private final List<GrantedAuthority> authorities;
 
-    public UserDetailsImpl(Long id, String username, String email, String passwordHash, List<GrantedAuthority> authoriries) {
+    /**
+     * Creates a new {@link UserDetails} instance with the provided user attributes.
+     *
+     * @param id database identifier of the user
+     * @param username username used for login
+     * @param email email address of the user
+     * @param passwordHash hashed password used by Spring Security
+     * @param authorities granted authorities for authorization checks
+     */
+    public UserDetailsImpl(Long id,
+                           String username,
+                           String email,
+                           String passwordHash,
+                           List<GrantedAuthority> authorities) {
         this.id = id;
         this.username = username;
         this.email = email;
         this.password = passwordHash;
-        this.authoriries = List.copyOf(authoriries);
+        this.authorities = List.copyOf(authorities);
     }
 
     @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() { return List.copyOf(authoriries); }
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.copyOf(authorities);
+    }
 
     @Override
-    public String getPassword() { return password; }
+    public String getPassword() {
+        return password;
+    }
 
     @Override
-    public String getUsername() { return username; }
-    
-    @Override
-    public boolean isAccountNonExpired() { return true; }
+    public String getUsername() {
+        return username;
+    }
 
     @Override
-    public boolean isAccountNonLocked() { return true; }
+    public boolean isAccountNonExpired() {
+        return true;
+    }
 
     @Override
-    public boolean isCredentialsNonExpired() { return true; }
-    
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
     @Override
-    public boolean isEnabled() { return true; }
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
 }

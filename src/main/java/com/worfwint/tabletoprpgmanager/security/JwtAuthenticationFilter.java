@@ -21,18 +21,31 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 /**
- *
- * @author michael
+ * Servlet filter that authenticates requests using Bearer JWT tokens.
  */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
 
+    /**
+     * Creates a new filter backed by the provided {@link JwtService}.
+     *
+     * @param jwtService service used to parse and validate tokens
+     */
     public JwtAuthenticationFilter(JwtService jwtService) {
         this.jwtService = jwtService;
     }
 
+    /**
+     * Attempts to authenticate the request using the Authorization header if present.
+     *
+     * @param request incoming HTTP request
+     * @param response outgoing HTTP response
+     * @param filterChain remaining filter chain to invoke
+     * @throws ServletException when downstream filters throw an exception
+     * @throws IOException when IO errors occur
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -67,7 +80,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     .collect(Collectors.toList());
             UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null, authorities);
             SecurityContextHolder.getContext().setAuthentication(auth);
-            
+
             filterChain.doFilter(request, response);
         } catch (UnauthorizedException e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

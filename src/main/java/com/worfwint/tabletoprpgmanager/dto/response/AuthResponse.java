@@ -1,8 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
-
 package com.worfwint.tabletoprpgmanager.dto.response;
 
 import lombok.Getter;
@@ -10,21 +5,58 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- *
- * @author michael
+ * Response payload returned after successful authentication or token refresh.
  */
 @NoArgsConstructor
 @Getter
 @Setter
 public class AuthResponse {
+
+    /**
+     * JWT access token that authorizes future API requests.
+     */
     private String accessToken;
+
+    /**
+     * JWT refresh token that can be exchanged for new access tokens.
+     */
     private String refreshToken;
+
+    /**
+     * The token type identifier used in Authorization headers.
+     */
     private String tokenType = "Bearer";
+
+    /**
+     * Identifier of the authenticated user.
+     */
     private Long userId;
+
+    /**
+     * Username of the authenticated user.
+     */
     private String username;
+
+    /**
+     * Email address of the authenticated user.
+     */
     private String email;
+
+    /**
+     * Display name presented to other users.
+     */
     private String displayName;
 
+    /**
+     * Creates a response with the token pair and user profile details.
+     *
+     * @param accessToken  issued access token
+     * @param refreshToken issued refresh token
+     * @param userId       identifier of the authenticated user
+     * @param username     username of the authenticated user
+     * @param email        email of the authenticated user
+     * @param displayName  display name to present to the client
+     */
     public AuthResponse(String accessToken, String refreshToken, Long userId,
                         String username, String email, String displayName) {
         this.accessToken = accessToken;

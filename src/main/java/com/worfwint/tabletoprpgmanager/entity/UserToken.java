@@ -21,8 +21,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Class representing user tokens for authentication or session management.
- * @author michael
+ * Stores metadata about refresh tokens issued to users.
  */
 @Entity
 @Table(name = "user_token")
@@ -32,32 +31,59 @@ import lombok.Setter;
 @Getter
 @Setter
 public class UserToken {
-    // @Column(nullable = false, unique = true)
+
+    /**
+     * Unique token identifier (JWT ID).
+     */
     @Id
     private UUID jti;
 
+    /**
+     * Hashed representation of the refresh token.
+     */
     @Column(nullable = false)
     private String token;
 
+    /**
+     * User who owns this token.
+     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    /**
+     * Indicates whether the token has been revoked.
+     */
     @Column(nullable = false)
     private boolean revoked = false;
 
+    /**
+     * Expiration time of the token.
+     */
     @Column(name = "expires_at", nullable = false)
     private Date expiresAt;
 
+    /**
+     * Timestamp when the token was revoked, if applicable.
+     */
     @Column(name = "revoked_at")
     private Date revokedAt = null;
 
+    /**
+     * Timestamp when the token was persisted.
+     */
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    // Constructors
-
+    /**
+     * Creates a new token entry bound to the specified user.
+     *
+     * @param jti unique token identifier
+     * @param user owner of the token
+     * @param token hashed token value
+     * @param expiresAt expiration date of the token
+     */
     public UserToken(UUID jti, User user, String token, Date expiresAt) {
         this.jti = jti;
         this.token = token;
