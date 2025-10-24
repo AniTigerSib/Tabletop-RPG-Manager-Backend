@@ -1,6 +1,7 @@
 package com.worfwint.tabletoprpgmanager.repository;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -22,12 +23,21 @@ import org.springframework.data.repository.query.Param;
 @Repository
 public interface UserTokenRepository extends JpaRepository<UserToken, UUID> {
 
-    Optional<UserToken> findByUser(User user);
+    List<UserToken> findByUser(User user);
 
-    Optional<UserToken> findByUserId(Long userId);
+    List<UserToken> findByUserId(Long userId);
 
     @Modifying
-    @Transactional
+    @Query("""
+        UPDATE UserToken ut
+        SET ut.revoked = true,
+            ut.revokedAt = :revokedAt
+        WHERE ut.jti = :jti
+          AND ut.revoked = false
+    """)
+    int revokeIfNotRevoked(@Param("jti") UUID jti, @Param("revokedAt") Date revokedAt);
+
+    @Modifying
     @Query("""
         UPDATE UserToken ut
         SET ut.revoked = true,

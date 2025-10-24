@@ -1,8 +1,7 @@
 package com.worfwint.tabletoprpgmanager.restcontroller;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,7 +17,6 @@ import com.worfwint.tabletoprpgmanager.exception.UnauthorizedException;
 import com.worfwint.tabletoprpgmanager.services.AuthService;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -60,8 +58,10 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout() {
-        AuthenticatedUser user = (AuthenticatedUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    public ResponseEntity<Object> logout(@AuthenticationPrincipal AuthenticatedUser user) {
+        if (user == null) {
+            return ResponseEntity.status(401).body("Unauthorized");
+        }
         authService.logout(user.getId());
         return ResponseEntity.ok().build();
     }
