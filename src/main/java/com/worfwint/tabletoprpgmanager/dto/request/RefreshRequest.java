@@ -6,12 +6,16 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- *
- * @author michael
+ * Request payload used to obtain a new access token from a refresh token.
  */
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 public class RefreshRequest {
-    @NotBlank private String refreshToken;
+
+    /**
+     * Refresh token issued during a previous authentication flow.
+     */
+    @NotBlank
+    private String refreshToken;
 }

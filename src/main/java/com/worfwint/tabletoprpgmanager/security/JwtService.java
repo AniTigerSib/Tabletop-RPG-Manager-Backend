@@ -1,9 +1,5 @@
 package com.worfwint.tabletoprpgmanager.security;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
-
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.time.Duration;
@@ -28,11 +24,13 @@ import com.worfwint.tabletoprpgmanager.exception.UnauthorizedException;
 import com.worfwint.tabletoprpgmanager.repository.UserTokenRepository;
 import com.worfwint.tabletoprpgmanager.services.TokenCacheService;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 
 /**
- *
- * @author michael
+ * Service responsible for issuing, validating, and revoking JWT tokens used by the application.
  */
 @Service
 public class JwtService {
@@ -56,20 +54,40 @@ public class JwtService {
     private final TokenCacheService tokenCacheService;
     private final UserTokenRepository userTokenRepository;
 
-    public JwtService(PasswordEncoder passwordEncoder, TokenCacheService tokenCacheService, UserTokenRepository userTokenRepository) {
+    /**
+     * Creates a new JWT service with the required dependencies.
+     *
+     * @param passwordEncoder encoder used to hash refresh tokens
+     * @param tokenCacheService cache used for access token versioning
+     * @param userTokenRepository repository storing issued refresh tokens
+     */
+    public JwtService(PasswordEncoder passwordEncoder,
+                      TokenCacheService tokenCacheService,
+                      UserTokenRepository userTokenRepository) {
         this.passwordEncoder = passwordEncoder;
         this.tokenCacheService = tokenCacheService;
         this.userTokenRepository = userTokenRepository;
     }
 
-    // Generating
-
+    /**
+     * Issues a new pair of access and refresh tokens for the provided user.
+     *
+     * @param user user for whom the tokens should be generated
+     * @return newly generated token pair
+     */
     public TokenPair generateTokenPair(User user) {
         final String refresh = generateRefreshToken(user);
         final String access = generateAccessToken(user);
         return new TokenPair(access, refresh);
     }
 
+    /**
+     * Exchanges a valid refresh token for a fresh token pair.
+     *
+     * @param refreshJwt refresh token presented by the client
+     * @param user user who owns the refresh token
+     * @return newly generated token pair
+     */
     @Transactional
     public TokenPair refresh(String refreshJwt, User user) {
         if (!isRefreshTokenValid(refreshJwt)) {
@@ -90,7 +108,7 @@ public class JwtService {
         if (token.getExpiresAt().before(new Date())) {
             throw new UnauthorizedException("Refresh token expired");
         }
-        
+
         if (token.isRevoked()) {
             throw new UnauthorizedException("Refresh token already revoked");
         }
@@ -105,6 +123,12 @@ public class JwtService {
         return new TokenPair(newAccess, newRefresh);
     }
 
+    /**
+     * Generates an access token containing user metadata and caches its identifier.
+     *
+     * @param user user for whom the access token should be generated
+     * @return signed access token
+     */
     public String generateAccessToken(User user) {
         final String tokenId = UUID.randomUUID().toString();
         final String token = buildAccessToken(tokenId, user.getId(), accessExpiration, Map.of(
@@ -114,6 +138,92 @@ public class JwtService {
         ));
         tokenCacheService.saveAccessTokenVersion(user.getId(), tokenId, Duration.ofMillis(accessExpiration));
         return token;
+    }
+
+    /**
+     * Revokes all active tokens for the specified user.
+     *
+     * @param userId identifier of the user whose tokens should be revoked
+     */
+    public void revokeAllTokens(Long userId) {
+        tokenCacheService.invalidate(userId);
+        userTokenRepository.revokeAllTokensForUser(userId, new Date());
+    }
+
+    /**
+     * Validates whether an access token is still valid and has not been revoked.
+     *
+     * @param token access token supplied by the client
+     * @return {@code true} if the token is valid and matches the cached version
+     */
+    public boolean isAccessTokenValid(String token) {
+        try {
+            final Claims claims = extractAllClaims(token);
+            final String tokenIssuer = claims.getIssuer();
+            final Long subject = Long.valueOf(claims.getSubject());
+            return !isTokenExpired(claims)
+                   && tokenIssuer.equals(issuer)
+                   && tokenCacheService.isValidAccessTokenVersion(subject, claims.getId());
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    /**
+     * Extracts the subject (user identifier) from a token.
+     *
+     * @param token JWT to parse
+     * @return user identifier encoded in the token
+     * @throws UnauthorizedException when the token cannot be parsed
+     */
+    public Long extractSubject(String token) {
+        try {
+            return extractClaim(token, claims -> Long.valueOf(claims.getSubject()));
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new UnauthorizedException("Invalid token subject");
+        }
+    }
+
+    /**
+     * Extracts a named claim from a token.
+     *
+     * @param token JWT to parse
+     * @param claimName name of the claim to read
+     * @param expectedType expected type of the claim value
+     * @param <T> type of the claim to return
+     * @return claim value or {@code null} when absent
+     * @throws UnauthorizedException when the token cannot be parsed
+     */
+    public <T> T extractClaim(String token, String claimName, Class<T> expectedType) {
+        try {
+            final Claims claims = extractAllClaims(token);
+            Object claimValue = claims.get(claimName);
+            if (claimValue == null) {
+                return null;
+            }
+
+            if (!expectedType.isInstance(claimValue)) {
+                throw new IllegalArgumentException("Claim value is not of the expected type");
+            }
+
+            return expectedType.cast(claimValue);
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new UnauthorizedException("Invalid token");
+        }
+    }
+
+    private boolean isTokenExpired(Claims claims) {
+        return claims.getExpiration().before(new Date());
+    }
+
+    private boolean isRefreshTokenValid(String token) {
+        try {
+            final Claims claims = extractAllClaims(token);
+            final String tokenIssuer = claims.getIssuer();
+            return !isTokenExpired(claims) && tokenIssuer.equals(issuer);
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
     }
 
     private String buildAccessToken(String tokenId, Long userId, long expiration, Map<String, Object> extraClaims) {
@@ -148,45 +258,6 @@ public class JwtService {
         return token;
     }
 
-    // Invalidating
-
-    public void revokeAllTokens(Long userId) {
-        tokenCacheService.invalidate(userId);
-        userTokenRepository.revokeAllTokensForUser(userId, new Date());
-    }
-
-    // Validation
-
-    public boolean isAccessTokenValid(String token) {
-        try {
-            final Claims claims = extractAllClaims(token);
-            final String tokenIssuer = claims.getIssuer();
-            final Long subject = Long.valueOf(claims.getSubject());
-            return !isTokenExpired(claims)
-                   && tokenIssuer.equals(issuer)
-                   && tokenCacheService.isValidAccessTokenVersion(subject, claims.getId());
-        } catch (JwtException | IllegalArgumentException e) {
-            return false;
-        } 
-    }
-
-    private boolean isTokenExpired(Claims claims) {
-        return claims.getExpiration().before(new Date());
-    }
-
-    private boolean isRefreshTokenValid(String token) {
-        try {
-            final Claims claims = extractAllClaims(token);
-            final String tokenIssuer = claims.getIssuer();
-            return !isTokenExpired(claims) && tokenIssuer.equals(issuer);
-        } catch (JwtException | IllegalArgumentException e) {
-            return false;
-        }
-    }
-
-
-    // Service
-
     private SecretKey getSignInKey() {
         byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
         return Keys.hmacShaKeyFor(keyBytes);
@@ -197,32 +268,6 @@ public class JwtService {
             return UUID.fromString(extractClaim(token, Claims::getId));
         } catch (JwtException | IllegalArgumentException e) {
             throw new UnauthorizedException("Invalid token ID");
-        }
-    }
-
-    public Long extractSubject(String token) {
-        try {
-            return extractClaim(token, claims -> Long.valueOf(claims.getSubject()));
-        } catch (JwtException | IllegalArgumentException e) {
-            throw new UnauthorizedException("Invalid token subject");
-        }
-    }
-
-    public <T> T extractClaim(String token, String claimName, Class<T> expectedType) {
-        try {
-            final Claims claims = extractAllClaims(token);
-            Object claimValue = claims.get(claimName);
-            if (claimValue == null) {
-                return null;
-            }
-            
-            if (!expectedType.isInstance(claimValue)) {
-                throw new IllegalArgumentException("Claim value is not of the expected type");
-            }
-            
-            return expectedType.cast(claimValue);
-        } catch (JwtException | IllegalArgumentException e) {
-            throw new UnauthorizedException("Invalid token");
         }
     }
 

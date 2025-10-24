@@ -6,8 +6,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest
 class TabletopRpgManagerApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
+    /**
+     * Verifies that the Spring application context loads successfully.
+     */
+    @Test
+    void contextLoads() {
+    }
 
 }

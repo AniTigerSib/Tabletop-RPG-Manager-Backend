@@ -33,8 +33,8 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
 /**
- * Entity representing a user in the system. Audited for tracking changes over time.
- * @author michael
+ * Entity representing an application user along with profile and security information.
+ * Auditing is enabled to track creation and update timestamps.
  */
 @Entity
 @Table(name = "users")
@@ -87,8 +87,18 @@ public class User {
 
     // Constructors
 
+    /**
+     * Default constructor required by JPA.
+     */
     public User() {}
 
+    /**
+     * Creates a new user with the mandatory authentication fields populated.
+     *
+     * @param username unique username for the user
+     * @param email email address associated with the account
+     * @param passwordHash encoded password hash
+     */
     public User(String username, String email, String passwordHash) {
         this.username = username;
         this.email = email;
@@ -125,9 +135,19 @@ public class User {
         this.passwordHash = passwordHash;
     }
 
+    /**
+     * Returns the roles assigned to the user.
+     *
+     * @return immutable set of roles
+     */
     public Set<UserRole> getRoles() {
         return Collections.unmodifiableSet(roles);
     }
+    /**
+     * Replaces the user's roles, ensuring the default user role is present.
+     *
+     * @param roles new role set
+     */
     public void setRoles(Set<UserRole> roles) {
         if (roles == null || roles.isEmpty()) {
             this.roles = EnumSet.of(UserRole.USER);
@@ -136,11 +156,21 @@ public class User {
             ensureDefaultRolePresent();
         }
     }
+    /**
+     * Adds a role to the user if it is not {@code null}.
+     *
+     * @param role role to add
+     */
     public void addRole(UserRole role) {
         if (role != null) {
             this.roles.add(role);
         }
     }
+    /**
+     * Removes a role from the user while keeping the default role.
+     *
+     * @param role role to remove
+     */
     public void removeRole(UserRole role) {
         if (role == null) {
             return;
@@ -149,6 +179,9 @@ public class User {
         ensureDefaultRolePresent();
     }
 
+    /**
+     * @return immutable set of role names assigned to the user
+     */
     public Set<String> getRoleNames() {
         return roles.stream()
                 .map(UserRole::name)
@@ -176,9 +209,19 @@ public class User {
         this.avatarUrl = avatarUrl;
     }
 
+    /**
+     * Returns tokens associated with the user.
+     *
+     * @return immutable copy of stored tokens
+     */
     public Set<UserToken> getTokens() {
         return Set.copyOf(tokens);
     }
+    /**
+     * Replaces the set of tokens associated with the user.
+     *
+     * @param tokens new token set
+     */
     public void setTokens(Set<UserToken> tokens) {
         if (tokens == null || tokens.isEmpty()) {
             this.tokens = new HashSet<>();
@@ -186,12 +229,22 @@ public class User {
             this.tokens = new HashSet<>(tokens);
         }
     }
+    /**
+     * Adds a token and establishes the bidirectional relationship.
+     *
+     * @param token token to add
+     */
     public void addToken(UserToken token) {
         if (token != null) {
             this.tokens.add(token);
             token.setUser(this);
         }
     }
+    /**
+     * Removes a token and clears the reverse association.
+     *
+     * @param token token to remove
+     */
     public void removeToken(UserToken token) {
         if (token != null) {
             this.tokens.remove(token);
@@ -213,6 +266,9 @@ public class User {
         this.updatedAt = updatedAt;
     }
 
+    /**
+     * Ensures the user always has at least the default role before persisting.
+     */
     @PrePersist
     @PreUpdate
     private void ensureRoleIntegrity() {
@@ -223,6 +279,9 @@ public class User {
         }
     }
 
+    /**
+     * Ensures the {@link UserRole#USER} role is present in the role set.
+     */
     private void ensureDefaultRolePresent() {
         if (!roles.contains(UserRole.USER)) {
             roles.add(UserRole.USER);
