@@ -2,6 +2,7 @@ package com.worfwint.tabletoprpgmanager.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -68,6 +69,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/login").permitAll()
                 .requestMatchers("/api/auth/register").permitAll()
                 .requestMatchers("/api/auth/refresh").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/news/**").permitAll()
                 .requestMatchers("/api/users/**").authenticated()
                 // .requestMatchers("/")
                 .anyRequest().authenticated()

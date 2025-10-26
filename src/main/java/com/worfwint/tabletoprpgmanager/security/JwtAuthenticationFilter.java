@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -78,6 +79,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             List<GrantedAuthority> authorities = roles.stream()
                     .map(r -> new SimpleGrantedAuthority("ROLE_" + r))
                     .collect(Collectors.toList());
+            for (GrantedAuthority authority : authorities) {
+                System.out.println(authority.getAuthority());
+            }
             UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null, authorities);
             SecurityContextHolder.getContext().setAuthentication(auth);
 
