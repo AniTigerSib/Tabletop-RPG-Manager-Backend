@@ -18,6 +18,7 @@ import com.worfwint.tabletoprpgmanager.security.JwtService;
 
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.web.server.ServerErrorException;
 
 /**
  * Handles authentication workflows such as registration, login, and token refresh.
@@ -37,7 +38,7 @@ public class AuthService {
      * @return authentication response containing the issued tokens
      */
     @Transactional
-    public AuthResponse register(@Valid @RequestBody RegisterRequest request) {
+    public void register(@Valid @RequestBody RegisterRequest request) {
         if (Boolean.TRUE.equals(userRepository.existsByUsername(request.getUsername()))) {
             throw new UsernameAlreadyExistsException();
         }
@@ -58,18 +59,7 @@ public class AuthService {
             user.setDisplayName(request.getUsername());
         }
 
-        user = userRepository.save(user);
-
-        TokenPair tokenPair = jwtService.generateTokenPair(user);
-
-        return new AuthResponse(
-                tokenPair.getAccessToken(),
-                tokenPair.getRefreshToken(),
-                user.getId(),
-                user.getUsername(),
-                user.getEmail(),
-                user.getDisplayName()
-        );
+        userRepository.save(user);
     }
 
     /**
