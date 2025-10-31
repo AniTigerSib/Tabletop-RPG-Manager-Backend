@@ -2,7 +2,7 @@ spring:
     application:
         name: tabletop-rpg-manager-dev
     datasource:
-        url: jdbc:postgresql://${PGHOST:localhost}:${PGPORT:8010}/${PGDATABASE:trpg_db}
+        url: jdbc:postgresql://${PGHOST:localhost}:${PGPORT:5432}/${PGDATABASE:trpg_db}
         username: ${PGUSER:trpg_user}
         password: ${PGPASSWORD:trpg_password}
         driver-class-name: org.postgresql.Driver
@@ -52,4 +52,4 @@ jwt:
 
 logging:
     level:
-        root: DEBUG
+        root: INFO
