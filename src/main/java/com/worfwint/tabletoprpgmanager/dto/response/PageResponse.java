@@ -4,41 +4,50 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * Generic pagination wrapper for API responses.
  *
  * @param <T> type of the elements contained in the page
  */
+@Schema(description = "Generic pagination envelope returned by list endpoints.")
 public class PageResponse<T> {
 
     /**
      * Elements contained in the current page.
      */
+    @Schema(description = "Elements contained in the current page")
     private final List<T> content;
 
     /**
      * Zero-based index of the current page.
      */
+    @Schema(description = "Zero-based index of the current page")
     private final int page;
 
     /**
      * Page size requested by the client.
      */
+    @Schema(description = "Number of elements requested for each page")
     private final int size;
 
     /**
      * Total number of elements across all pages.
      */
+    @Schema(description = "Total number of elements available for the query")
     private final long totalElements;
 
     /**
      * Total number of pages available for the query.
      */
+    @Schema(description = "Total number of pages that can be retrieved")
     private final int totalPages;
 
     /**
      * Indicates whether the current page is the last one.
      */
+    @Schema(description = "Indicates whether this page is the last page")
     private final boolean last;
 
     /**
