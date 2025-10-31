@@ -24,6 +24,13 @@ import com.worfwint.tabletoprpgmanager.exception.UnauthorizedException;
 import com.worfwint.tabletoprpgmanager.exception.UserNotFoundException;
 import com.worfwint.tabletoprpgmanager.services.UserService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
 /**
  * REST controller exposing endpoints for retrieving user profile information.
  */
@@ -51,6 +58,25 @@ public class UserController {
      * @param size requested page size
      * @return page of public profile summaries
      */
+    @Operation(
+            summary = "List public user profiles",
+            description = "Returns a paginated slice of user profiles that are visible to all clients. "
+                    + "Use the optional page and size parameters to navigate through the entire result set."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Page of public profiles returned successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = PageResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid pagination parameters",
+                    content = @Content(mediaType = "text/plain",
+                            schema = @Schema(implementation = String.class))
+            )
+    })
     @GetMapping({"", "/"})
     public PageResponse<UserPublicProfileResponse> getUsers(
             @RequestParam(defaultValue = "0") int page,
@@ -67,6 +93,25 @@ public class UserController {
      * @param size requested page size
      * @return page of search results
      */
+    @Operation(
+            summary = "Search users by username",
+            description = "Performs a case-insensitive search using the provided username fragment and returns "
+                    + "a paginated collection of matches. When the query parameter is omitted all users are returned."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Page of matching users returned successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = PageResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid pagination parameters",
+                    content = @Content(mediaType = "text/plain",
+                            schema = @Schema(implementation = String.class))
+            )
+    })
     @GetMapping("/search")
     public PageResponse<UserSearchInfoResponse> searchUsers(
             @RequestParam(value = "q", required = false) String query,
@@ -82,9 +127,27 @@ public class UserController {
      * @param authenticatedUser current user injected by Spring Security
      * @return full profile DTO
      */
+    @Operation(
+            summary = "Get current user profile",
+            description = "Returns the authenticated user's full profile including email, display name and roles."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Profile returned successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = UserFullProfileResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "No authenticated user was provided",
+                    content = @Content(mediaType = "text/plain",
+                            schema = @Schema(implementation = String.class))
+            )
+    })
     @GetMapping("/me")
     public UserFullProfileResponse getCurrentUserProfile(
-            @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
+            @Parameter(hidden = true) @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
         if (authenticatedUser == null) {
             throw new UnauthorizedException("Unauthorized");
         }
@@ -97,6 +160,24 @@ public class UserController {
      * @param userId user identifier
      * @return public profile DTO
      */
+    @Operation(
+            summary = "Get a user's public profile",
+            description = "Returns the public information for the user identified by the supplied identifier."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Public profile returned successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = UserPublicProfileResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "The requested user could not be found",
+                    content = @Content(mediaType = "text/plain",
+                            schema = @Schema(implementation = String.class))
+            )
+    })
     @GetMapping("/{userId}")
     public UserPublicProfileResponse getUserPublicProfile(@PathVariable Long userId) {
         return userService.getPublicUserProfile(userId);
@@ -108,6 +189,24 @@ public class UserController {
      * @param username username to lookup
      * @return public profile DTO
      */
+    @Operation(
+            summary = "Get a user's public profile by username",
+            description = "Retrieves the public profile associated with the supplied username, ignoring case."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Public profile returned successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = UserPublicProfileResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "No user with the provided username exists",
+                    content = @Content(mediaType = "text/plain",
+                            schema = @Schema(implementation = String.class))
+            )
+    })
     @GetMapping("/by-username/{username}")
     public UserPublicProfileResponse getUserPublicProfileByUsername(@PathVariable String username) {
         return userService.getPublicUserProfileByUsername(username);
@@ -120,6 +219,31 @@ public class UserController {
      * @param userId user identifier
      * @return full profile DTO
      */
+    @Operation(
+            summary = "Get a user's full profile",
+            description = "Returns the complete profile of the requested user. Access is limited to moderators, "
+                    + "administrators, developers or the user whose profile is being requested."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Full profile returned successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = UserFullProfileResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "The caller is not allowed to access this profile",
+                    content = @Content(mediaType = "text/plain",
+                            schema = @Schema(implementation = String.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "The requested user could not be found",
+                    content = @Content(mediaType = "text/plain",
+                            schema = @Schema(implementation = String.class))
+            )
+    })
     @PreAuthorize("hasAnyRole('MODERATOR','ADMIN','DEVELOPER') or #userId == principal.id")
     @GetMapping("/{userId}/full")
     public UserFullProfileResponse getUserFullProfile(@PathVariable Long userId) {
