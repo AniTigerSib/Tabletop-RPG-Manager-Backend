@@ -25,6 +25,7 @@ import jakarta.servlet.http.HttpServletResponse;
  * Servlet filter that authenticates requests using Bearer JWT tokens.
  */
 @Component
+@Lazy
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;

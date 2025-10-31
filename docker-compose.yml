@@ -10,7 +10,7 @@ services:
       - dev_postgres_data:/var/lib/postgresql/data
       - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     ports:
-      - "8010:5432"
+      - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U trpg_user -d trpg_db"]
       interval: 10s
