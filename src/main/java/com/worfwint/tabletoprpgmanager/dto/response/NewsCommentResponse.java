@@ -2,16 +2,25 @@ package com.worfwint.tabletoprpgmanager.dto.response;
 
 import java.time.LocalDateTime;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * Response model representing a single news comment.
  */
+@Schema(description = "Representation of a news article comment including authorship metadata.")
 public class NewsCommentResponse {
 
+    @Schema(description = "Unique identifier of the comment")
     private final Long id;
+    @Schema(description = "Body text of the comment")
     private final String content;
+    @Schema(description = "Timestamp when the comment was created")
     private final LocalDateTime createdAt;
+    @Schema(description = "Timestamp of the latest update")
     private final LocalDateTime updatedAt;
+    @Schema(description = "Indicates if the authenticated user authored the comment")
     private final boolean ownedByCurrentUser;
+    @Schema(description = "Author of the comment")
     private final NewsAuthorResponse author;
 
     public NewsCommentResponse(Long id,
