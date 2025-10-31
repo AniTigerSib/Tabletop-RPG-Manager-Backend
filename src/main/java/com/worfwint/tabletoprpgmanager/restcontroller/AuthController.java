@@ -47,7 +47,7 @@ public class AuthController {
      * Registers a new user account.
      *
      * @param request registration details
-     * @return {@link AuthResponse} on success or validation errors on failure
+     * @return {@code 200 OK} on success or validation errors on failure
      */
     @Operation(
             summary = "Register a new account",
@@ -56,9 +56,9 @@ public class AuthController {
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "Registration succeeded and the user is automatically authenticated",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = AuthResponse.class))
+                    description = "Registration succeeded",
+                    content = @Content(mediaType = "text/plain",
+                            schema = @Schema(implementation = String.class))
             ),
             @ApiResponse(
                     responseCode = "400",
@@ -70,8 +70,8 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<Object> register(@Valid @RequestBody RegisterRequest request) {
         try {
-            AuthResponse response = authService.register(request);
-            return ResponseEntity.ok(response);
+            authService.register(request);
+            return ResponseEntity.ok().body("Registered successfully");
         } catch (BadRequestException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -161,7 +161,7 @@ public class AuthController {
                     responseCode = "200",
                     description = "Logout completed successfully",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = Void.class))
+                            schema = @Schema())
             ),
             @ApiResponse(
                     responseCode = "401",
