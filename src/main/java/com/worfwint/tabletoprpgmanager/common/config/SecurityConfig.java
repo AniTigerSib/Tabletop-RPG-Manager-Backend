@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.WebSecurityConfigurer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -17,6 +18,8 @@ import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import com.worfwint.tabletoprpgmanager.auth.security.JwtAuthenticationFilter;
 
 import jakarta.validation.Validator;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
  * Configures application security including authentication filters and password encoding.
@@ -24,7 +27,7 @@ import jakarta.validation.Validator;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
-public class SecurityConfig {
+public class SecurityConfig implements WebMvcConfigurer {
 
     /**
      * Provides the {@link PasswordEncoder} used to hash user passwords.
@@ -70,11 +73,16 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/register").permitAll()
                 .requestMatchers("/api/auth/refresh").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/news/**").permitAll()
-                .requestMatchers("/api/users/**").authenticated()
-                // .requestMatchers("/")
                 .anyRequest().authenticated()
             )
-            .formLogin(form -> form.disable());
+            .formLogin(AbstractHttpConfigurer::disable);
         return http.build();
+    }
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOrigins("http://localhost:5173")
+                .allowedMethods("*");
     }
 }

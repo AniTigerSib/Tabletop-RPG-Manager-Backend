@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: trpg_db
+          POSTGRES_USER: trpg_user
+          POSTGRES_PASSWORD: trpg_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U trpg_user -d trpg_db"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGDATABASE: trpg_db
+      PGUSER: trpg_user
+      PGPASSWORD: trpg_password
+      REDIS_HOST: localhost
+      REDIS_PORT: 6379
+      REDIS_USERNAME: ""
+      REDIS_PASSWORD: ""
+      SPRING_PROFILES_ACTIVE: dev
+      ADMIN_PASSWORD: change-me-ci
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Wait for services
+        run: |
+          until pg_isready -h localhost -p 5432 -U trpg_user; do
+            echo "Waiting for postgres...";
+            sleep 3;
+          done
+        shell: bash
+
+      - name: Build and test
+        run: ./gradlew --no-daemon build
