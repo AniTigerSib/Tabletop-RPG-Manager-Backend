@@ -20,7 +20,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * @param createdAt   Timestamp when the user account was created.
  * @param updatedAt   Timestamp when the user account was last updated.
  */
-@Schema(description = "Complete user profile returned to the account owner and privileged roles.")
+@Schema(description = "Complete user profile returned to the privileged roles.")
 public record UserFullProfileResponse(@Schema(description = "Unique identifier of the user") Long id,
                                       @Schema(description = "Username chosen by the user") String username,
                                       @Schema(description = "Email address associated with the user account") String email,

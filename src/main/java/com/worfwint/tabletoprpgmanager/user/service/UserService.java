@@ -1,5 +1,6 @@
 package com.worfwint.tabletoprpgmanager.user.service;
 
+import com.worfwint.tabletoprpgmanager.user.dto.response.SelfUserProfile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -55,6 +56,12 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
         return mapToUserFullProfileResponse(user);
+    }
+
+    public SelfUserProfile getSelfUserProfile(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+        return mapToSelfUserProfileResponse(user);
     }
 
     /**
@@ -190,6 +197,18 @@ public class UserService {
                 user.getUsername(),
                 user.getDisplayName(),
                 user.getAvatarUrl()
+        );
+    }
+
+    private SelfUserProfile mapToSelfUserProfileResponse(User user) {
+        return new SelfUserProfile(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getDisplayName(),
+                user.getBio(),
+                user.getAvatarUrl(),
+                user.getCreatedAt()
         );
     }
 }

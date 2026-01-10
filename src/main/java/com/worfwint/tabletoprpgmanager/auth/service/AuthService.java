@@ -90,8 +90,7 @@ public class AuthService {
                 tokenPair.refreshToken(),
                 user.getId(),
                 user.getUsername(),
-                user.getEmail(),
-                user.getDisplayName()
+                user.getRoles()
         );
     }
 
@@ -115,8 +114,7 @@ public class AuthService {
                 tokenPair.refreshToken(),
                 user.getId(),
                 user.getUsername(),
-                user.getEmail(),
-                user.getDisplayName()
+                user.getRoles()
         );
     }
 

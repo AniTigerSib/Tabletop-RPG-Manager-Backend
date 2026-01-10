@@ -1,5 +1,6 @@
 package com.worfwint.tabletoprpgmanager.user.restcontroller;
 
+import com.worfwint.tabletoprpgmanager.user.dto.response.SelfUserProfile;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -129,14 +130,14 @@ public class UserController {
      */
     @Operation(
             summary = "Get current user profile",
-            description = "Returns the authenticated user's full profile including email, display name and roles."
+            description = "Returns the authenticated user's full profile including email and display name."
     )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
                     description = "Profile returned successfully",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = UserFullProfileResponse.class))
+                            schema = @Schema(implementation = SelfUserProfile.class))
             ),
             @ApiResponse(
                     responseCode = "401",
@@ -146,12 +147,12 @@ public class UserController {
             )
     })
     @GetMapping("/me")
-    public UserFullProfileResponse getCurrentUserProfile(
+    public SelfUserProfile getCurrentUserProfile(
             @Parameter(hidden = true) @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
         if (authenticatedUser == null) {
             throw new UnauthorizedException("Unauthorized");
         }
-        return userService.getFullUserProfile(authenticatedUser.id());
+        return userService.getSelfUserProfile(authenticatedUser.id());
     }
 
     /**

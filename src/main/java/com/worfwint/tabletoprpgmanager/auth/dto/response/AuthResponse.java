@@ -1,10 +1,13 @@
 package com.worfwint.tabletoprpgmanager.auth.dto.response;
 
+import com.worfwint.tabletoprpgmanager.user.entity.UserRole;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.util.Set;
 
 /**
  * Response payload returned after successful authentication or token refresh.
@@ -27,11 +30,11 @@ public class AuthResponse {
     @Schema(description = "JWT refresh token that can be exchanged for a new access token")
     private String refreshToken;
 
-    /**
-     * The token type identifier used in Authorization headers.
-     */
-    @Schema(description = "Type of token placed in the Authorization header", example = "Bearer")
-    private String tokenType = "Bearer";
+    // /**
+    //  * The token type identifier used in Authorization headers.
+    //  */
+    // @Schema(description = "Type of token placed in the Authorization header", example = "Bearer")
+    // private String tokenType = "Bearer";
 
     /**
      * Identifier of the authenticated user.
@@ -45,17 +48,8 @@ public class AuthResponse {
     @Schema(description = "Username of the authenticated user")
     private String username;
 
-    /**
-     * Email address of the authenticated user.
-     */
-    @Schema(description = "Email address of the authenticated user")
-    private String email;
-
-    /**
-     * Display name presented to other users.
-     */
-    @Schema(description = "Display name presented to other users")
-    private String displayName;
+    @Schema(description = "List of roles assigned to the user")
+    private Set<UserRole> roles;
 
     /**
      * Creates a response with the token pair and user profile details.
@@ -68,12 +62,11 @@ public class AuthResponse {
      * @param displayName  display name to present to the client
      */
     public AuthResponse(String accessToken, String refreshToken, Long userId,
-                        String username, String email, String displayName) {
+                        String username, Set<UserRole> roles) {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
         this.userId = userId;
         this.username = username;
-        this.email = email;
-        this.displayName = displayName;
+        this.roles = roles;
     }
 }
