@@ -1,14 +1,12 @@
-name: CI
+name: CI-CD
 
 on:
   push:
-    branches: [ "main", "master" ]
-  pull_request:
-    branches: [ "main", "master" ]
+    branches: [ "master" ]
 
 jobs:
-  build-and-test:
-    runs-on: self-hosted
+  ci:
+    runs-on: [self-hosted, ci]
 
     services:
       postgres:
@@ -61,16 +59,48 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x gradlew
 
-      - name: Install PostgreSQL client
-        run: sudo apt-get update && sudo apt-get install -y postgresql-client
-
       - name: Wait for services
         run: |
-          until pg_isready -h localhost -p 5432 -U trpg_user; do
-            echo "Waiting for postgres...";
+          until (echo > /dev/tcp/localhost/5432) >/dev/null 2>&1; do
+            echo "Waiting for postgres port...";
+            sleep 3;
+          done
+          until (echo > /dev/tcp/localhost/6379) >/dev/null 2>&1; do
+            echo "Waiting for redis port...";
             sleep 3;
           done
         shell: bash
 
-      - name: Build and test
-        run: ./gradlew --no-daemon build
+      - name: Test
+        run: ./gradlew --no-daemon test
+
+  cd:
+    needs: ci
+    runs-on: [self-hosted, cd]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
+
+      - name: Prepare environment file
+        run: |
+          cat > .env.prod <<'EOF'
+          PGPASSWORD=${{ secrets.PROD_PGPASSWORD }}
+          JWT_SECRET=${{ secrets.PROD_JWT_SECRET }}
+          ADMIN_USERNAME=${{ secrets.PROD_ADMIN_USERNAME }}
+          ADMIN_EMAIL=${{ secrets.PROD_ADMIN_EMAIL }}
+          ADMIN_PASSWORD=${{ secrets.PROD_ADMIN_PASSWORD }}
+          EOF
+
+      - name: Deploy
+        run: bash scripts/deploy-prod.sh
