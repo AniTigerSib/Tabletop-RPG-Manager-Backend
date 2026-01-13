@@ -1,0 +1,8 @@
+.gradle
+.idea
+.github
+out
+bin
+.env
+.env.prod
+*.iml
