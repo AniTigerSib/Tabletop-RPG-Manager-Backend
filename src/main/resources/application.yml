@@ -42,7 +42,7 @@ management:
       show-details: when-authorized
 
 jwt:
-#  secret: secret-key-for-dev-environment-please-change-me
+  # secret: secret-key-for-dev-environment-please-change-me
   # secret: ${random.value}
   secret: ${JWT_SECRET:${random.value}}
   refresh-length: 32 # 256 bits of entropy
