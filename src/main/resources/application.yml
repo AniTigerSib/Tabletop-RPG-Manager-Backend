@@ -55,6 +55,8 @@ logging:
     root: INFO
 
 app:
+  cors:
+    allowed-origins: "https://tabletop-assistent.ru"
   bootstrap:
     admin:
       username: ${ADMIN_USERNAME:admin}
