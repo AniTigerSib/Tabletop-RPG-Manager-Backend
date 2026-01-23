@@ -16,6 +16,8 @@ public class NewsDetailResponse {
     private final String title;
     @Schema(description = "Short teaser displayed in lists")
     private final String summary;
+    @Schema(description = "URL pointing to the article image", nullable = true)
+    private final String imageUrl;
     @Schema(description = "Full article contents in Markdown format")
     private final String content;
     @Schema(description = "Timestamp when the article was created")
@@ -34,6 +36,7 @@ public class NewsDetailResponse {
     public NewsDetailResponse(Long id,
                               String title,
                               String summary,
+                              String imageUrl,
                               String content,
                               LocalDateTime createdAt,
                               LocalDateTime updatedAt,
@@ -44,6 +47,7 @@ public class NewsDetailResponse {
         this.id = id;
         this.title = title;
         this.summary = summary;
+        this.imageUrl = imageUrl;
         this.content = content;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -63,6 +67,10 @@ public class NewsDetailResponse {
 
     public String getSummary() {
         return summary;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
     }
 
     public String getContent() {

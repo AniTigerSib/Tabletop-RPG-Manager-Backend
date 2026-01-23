@@ -55,6 +55,14 @@ logging:
     root: INFO
 
 app:
+  s3:
+    endpoint: ${S3_ENDPOINT:https://s3.cloud.ru/test-bucket-trpg-assistent}
+    bucket: ${S3_BUCKET:test-bucket-trpg-assistent}
+    public-base-url: ${S3_PUBLIC_BASE_URL:https://tabletop-assistent.s3.cloud.ru}
+    region: ${S3_REGION:ru-1}
+    access-key: ${S3_ACCESS_KEY:}
+    secret-key: ${S3_SECRET_KEY:}
+    public-read: ${S3_PUBLIC_READ:true}
   cors:
     allowed-origins: "https://tabletop-assistent.ru"
   bootstrap:

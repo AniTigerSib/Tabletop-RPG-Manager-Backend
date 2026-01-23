@@ -23,6 +23,7 @@ configurations {
 }
 
 dependencies {
+    implementation(platform("software.amazon.awssdk:bom:2.27.4"))
     implementation("org.springframework.boot:spring-boot-starter")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
@@ -40,6 +41,7 @@ dependencies {
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
     implementation("io.jsonwebtoken:jjwt-api:0.12.3")
     implementation("com.puppycrawl.tools:checkstyle:12.1.0")
+    implementation("software.amazon.awssdk:s3")
 
     runtimeOnly("org.postgresql:postgresql")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.3")
