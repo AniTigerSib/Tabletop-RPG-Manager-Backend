@@ -89,6 +89,16 @@ public class User {
     @Column(name = "avatar_url")
     private String avatarUrl;
 
+    @Setter
+    @Getter
+    @Column(name = "is_disabled", nullable = false)
+    private boolean isDisabled;
+
+    @Setter
+    @Getter
+    @Column(name = "disabled_since")
+    private LocalDateTime disabledSince;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<UserToken> tokens = new HashSet<>();
 
@@ -268,6 +278,8 @@ public class User {
                 ", displayName='" + displayName + '\'' +
                 ", bio='" + bio + '\'' +
                 ", avatarUrl='" + avatarUrl + '\'' +
+                ", isDisabled=" + isDisabled +
+                ", disabledSince=" + disabledSince +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
                 '}';

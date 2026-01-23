@@ -99,7 +99,7 @@ public class UserService {
      * @return page of public profile DTOs
      */
     public PageResponse<UserPublicProfileResponse> getUsers(Pageable pageable) {
-        Page<User> users = userRepository.findAll(pageable);
+        Page<User> users = userRepository.findAllByIsDisabledFalse(pageable);
         return PageResponse.from(users.map(this::mapToUserPublicProfileResponse));
     }
 
@@ -113,9 +113,11 @@ public class UserService {
     public PageResponse<UserSearchProfileResponse> searchUsers(String username, Pageable pageable) {
         Page<User> usersPage;
         if (username == null || username.isBlank()) {
-            usersPage = userRepository.findAll(pageable);
+            usersPage = userRepository.findAllByIsDisabledFalse(pageable);
         } else {
-            usersPage = userRepository.findByUsernameContainingIgnoreCase(username.trim(), pageable);
+            usersPage = userRepository.findByIsDisabledFalseAndUsernameContainingIgnoreCase(
+                    username.trim(),
+                    pageable);
         }
         return PageResponse.from(usersPage.map(this::mapToUserSearchInfoResponse));
     }
@@ -126,10 +128,13 @@ public class UserService {
      * @param userId identifier of the user to delete
      */
     public void deleteUser(Long userId) {
-        if (!userRepository.existsById(userId)) {
-            throw new UserNotFoundException();
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+        if (!user.isDisabled()) {
+            user.setDisabled(true);
+            user.setDisabledSince(java.time.LocalDateTime.now());
+            userRepository.save(user);
         }
-        userRepository.deleteById(userId);
     }
 
     /**

@@ -14,7 +14,7 @@ spring:
       password: ${REDIS_PASSWORD:}
   jpa:
     hibernate:
-      ddl-auto: update # dev only!
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
@@ -26,6 +26,9 @@ spring:
           revision-field-name: revision_id
           revision-type-field-name: revision_type
           default-schema: audit
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yaml
 
 server:
   port: 9010
@@ -53,10 +56,12 @@ jwt:
 logging:
   level:
     root: INFO
+    org.springframework.security: DEBUG
+    org.springframework.web.cors: DEBUG
 
 app:
   cors:
-    allowed-origins: "https://tabletop-assistent.ru"
+    allowed-origins: "https://tabletop-assistent.ru,"
   bootstrap:
     admin:
       username: ${ADMIN_USERNAME:admin}

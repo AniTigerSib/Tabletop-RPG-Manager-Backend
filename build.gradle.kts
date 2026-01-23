@@ -40,6 +40,7 @@ dependencies {
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
     implementation("io.jsonwebtoken:jjwt-api:0.12.3")
     implementation("com.puppycrawl.tools:checkstyle:12.1.0")
+    implementation("org.liquibase:liquibase-core")
 
     runtimeOnly("org.postgresql:postgresql")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.3")

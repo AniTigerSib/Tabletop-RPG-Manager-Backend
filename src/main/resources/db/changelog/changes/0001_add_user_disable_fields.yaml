@@ -1,0 +1,27 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0001-add-user-disable-fields
+      author: codex
+      changes:
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: is_disabled
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: disabled_since
+                  type: timestamp
+        - addColumn:
+            schemaName: audit
+            tableName: users_audit
+            columns:
+              - column:
+                  name: is_disabled
+                  type: boolean
+              - column:
+                  name: disabled_since
+                  type: timestamp

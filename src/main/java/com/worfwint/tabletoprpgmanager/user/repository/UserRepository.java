@@ -66,6 +66,23 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Page<User> findByUsernameContainingIgnoreCase(String username, Pageable pageable);
 
     /**
+     * Returns a paged result of active users.
+     *
+     * @param pageable paging information
+     * @return a page of active users
+     */
+    Page<User> findAllByIsDisabledFalse(Pageable pageable);
+
+    /**
+     * Returns a paged result of active users whose username matches the supplied fragment.
+     *
+     * @param username partial username to search for
+     * @param pageable paging information
+     * @return a page of active users matching the search
+     */
+    Page<User> findByIsDisabledFalseAndUsernameContainingIgnoreCase(String username, Pageable pageable);
+
+    /**
      * Returns a paged result of users filtered by both username and email fragments.
      *
      * @param username partial username to search for
