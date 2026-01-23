@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.worfwint.tabletoprpgmanager.common.dto.AuthenticatedUser;
 import com.worfwint.tabletoprpgmanager.news.dto.request.CreateNewsCommentRequest;
@@ -29,6 +30,7 @@ import com.worfwint.tabletoprpgmanager.user.entity.UserRole;
 import com.worfwint.tabletoprpgmanager.news.exception.NewsArticleNotFoundException;
 import com.worfwint.tabletoprpgmanager.news.exception.NewsCommentNotFoundException;
 import com.worfwint.tabletoprpgmanager.common.exception.UnauthorizedException;
+import com.worfwint.tabletoprpgmanager.storage.S3StorageService;
 import com.worfwint.tabletoprpgmanager.user.exception.UserNotFoundException;
 import com.worfwint.tabletoprpgmanager.news.repository.NewsArticleRepository;
 import com.worfwint.tabletoprpgmanager.news.repository.NewsCommentRepository;
@@ -46,15 +48,18 @@ public class NewsService {
     private final NewsCommentRepository newsCommentRepository;
     private final NewsLikeRepository newsLikeRepository;
     private final UserRepository userRepository;
+    private final S3StorageService storageService;
 
     public NewsService(NewsArticleRepository newsArticleRepository,
                        NewsCommentRepository newsCommentRepository,
                        NewsLikeRepository newsLikeRepository,
-                       UserRepository userRepository) {
+                       UserRepository userRepository,
+                       S3StorageService storageService) {
         this.newsArticleRepository = newsArticleRepository;
         this.newsCommentRepository = newsCommentRepository;
         this.newsLikeRepository = newsLikeRepository;
         this.userRepository = userRepository;
+        this.storageService = storageService;
     }
 
     /**
@@ -131,6 +136,52 @@ public class NewsService {
         article.setTitle(request.getTitle().trim());
         article.setSummary(trimToNull(request.getSummary()));
         article.setContent(request.getContent().trim());
+
+        return mapToNewsDetail(article, newsLikeRepository.existsByArticleIdAndUserId(articleId, actor.getId()));
+    }
+
+    /**
+     * Uploads an image for the specified news article.
+     *
+     * @param articleId identifier of the article to update
+     * @param currentUser authenticated user attempting the update
+     * @param file image file to upload
+     * @return updated article response
+     */
+    public NewsDetailResponse uploadArticleImage(Long articleId,
+                                                 AuthenticatedUser currentUser,
+                                                 MultipartFile file) {
+        NewsArticle article = newsArticleRepository.findById(articleId)
+                .orElseThrow(NewsArticleNotFoundException::new);
+        User actor = requireUser(currentUser);
+        ensureArticleModificationAllowed(actor, article);
+
+        if (article.getImageUrl() != null && !article.getImageUrl().isBlank()) {
+            storageService.deleteByPublicUrl(article.getImageUrl());
+        }
+        String imageUrl = storageService.uploadNewsImage(articleId, file);
+        article.setImageUrl(imageUrl);
+
+        return mapToNewsDetail(article, newsLikeRepository.existsByArticleIdAndUserId(articleId, actor.getId()));
+    }
+
+    /**
+     * Deletes the image for the specified news article.
+     *
+     * @param articleId identifier of the article to update
+     * @param currentUser authenticated user attempting the update
+     * @return updated article response
+     */
+    public NewsDetailResponse deleteArticleImage(Long articleId, AuthenticatedUser currentUser) {
+        NewsArticle article = newsArticleRepository.findById(articleId)
+                .orElseThrow(NewsArticleNotFoundException::new);
+        User actor = requireUser(currentUser);
+        ensureArticleModificationAllowed(actor, article);
+
+        if (article.getImageUrl() != null && !article.getImageUrl().isBlank()) {
+            storageService.deleteByPublicUrl(article.getImageUrl());
+            article.setImageUrl(null);
+        }
 
         return mapToNewsDetail(article, newsLikeRepository.existsByArticleIdAndUserId(articleId, actor.getId()));
     }
@@ -307,6 +358,7 @@ public class NewsService {
                 article.getId(),
                 article.getTitle(),
                 article.getSummary(),
+                article.getImageUrl(),
                 article.getContent(),
                 article.getCreatedAt(),
                 article.getUpdatedAt(),

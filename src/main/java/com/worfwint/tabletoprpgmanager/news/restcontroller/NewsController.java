@@ -4,6 +4,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.worfwint.tabletoprpgmanager.common.dto.AuthenticatedUser;
 import com.worfwint.tabletoprpgmanager.news.dto.request.CreateNewsCommentRequest;
@@ -227,6 +229,142 @@ public class NewsController {
                                          @Parameter(hidden = true)
                                          @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
         return newsService.updateArticle(articleId, authenticatedUser, request);
+    }
+
+    /**
+     * Uploads an image for an existing news article.
+     *
+     * @param articleId identifier of the article
+     * @param file image file to upload
+     * @param authenticatedUser authenticated user performing the upload
+     * @return updated article response
+     */
+    @Operation(
+            summary = "Upload article image",
+            description = "Uploads a single image for the specified article and stores its URL."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Image uploaded successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = NewsDetailResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid image upload request",
+                    content = @Content(mediaType = "text/plain",
+                            schema = @Schema(implementation = String.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "The caller is not authenticated",
+                    content = @Content(mediaType = "text/plain",
+                            schema = @Schema(implementation = String.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "The caller lacks permissions to modify the article",
+                    content = @Content(mediaType = "text/plain",
+                            schema = @Schema(implementation = String.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "The targeted article was not found",
+                    content = @Content(mediaType = "text/plain",
+                            schema = @Schema(implementation = String.class))
+            )
+    })
+    @PreAuthorize("hasAnyRole('MODERATOR','ADMIN','DEVELOPER')")
+    @PostMapping(value = "/{articleId}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public NewsDetailResponse uploadNewsImage(@PathVariable Long articleId,
+                                              @RequestParam("file") MultipartFile file,
+                                              @Parameter(hidden = true)
+                                              @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
+        return newsService.uploadArticleImage(articleId, authenticatedUser, file);
+    }
+
+    @Operation(
+            summary = "Update article image",
+            description = "Replaces the image for the specified article with a new upload."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Image updated successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = NewsDetailResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid image upload request",
+                    content = @Content(mediaType = "text/plain",
+                            schema = @Schema(implementation = String.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "The caller is not authenticated",
+                    content = @Content(mediaType = "text/plain",
+                            schema = @Schema(implementation = String.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "The caller lacks permissions to modify the article",
+                    content = @Content(mediaType = "text/plain",
+                            schema = @Schema(implementation = String.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "The targeted article was not found",
+                    content = @Content(mediaType = "text/plain",
+                            schema = @Schema(implementation = String.class))
+            )
+    })
+    @PreAuthorize("hasAnyRole('MODERATOR','ADMIN','DEVELOPER')")
+    @PutMapping(value = "/{articleId}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public NewsDetailResponse updateNewsImage(@PathVariable Long articleId,
+                                              @RequestParam("file") MultipartFile file,
+                                              @Parameter(hidden = true)
+                                              @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
+        return newsService.uploadArticleImage(articleId, authenticatedUser, file);
+    }
+
+    @Operation(
+            summary = "Delete article image",
+            description = "Removes the image associated with the specified article."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Image deleted successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = NewsDetailResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "The caller is not authenticated",
+                    content = @Content(mediaType = "text/plain",
+                            schema = @Schema(implementation = String.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "The caller lacks permissions to modify the article",
+                    content = @Content(mediaType = "text/plain",
+                            schema = @Schema(implementation = String.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "The targeted article was not found",
+                    content = @Content(mediaType = "text/plain",
+                            schema = @Schema(implementation = String.class))
+            )
+    })
+    @PreAuthorize("hasAnyRole('MODERATOR','ADMIN','DEVELOPER')")
+    @DeleteMapping("/{articleId}/image")
+    public NewsDetailResponse deleteNewsImage(@PathVariable Long articleId,
+                                              @Parameter(hidden = true)
+                                              @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
+        return newsService.deleteArticleImage(articleId, authenticatedUser);
     }
 
     /**

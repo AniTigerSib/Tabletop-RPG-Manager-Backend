@@ -46,6 +46,9 @@ public class NewsArticle {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
+    @Column(name = "image_url", length = 1024)
+    private String imageUrl;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "author_id", nullable = false, updatable = false)
     private User author;
@@ -100,6 +103,14 @@ public class NewsArticle {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
     public User getAuthor() {
